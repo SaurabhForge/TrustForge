@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@import "tailwindcss";
+
+@theme {
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-secondary-fixed-dim: #adc7fc;
+  --color-on-secondary: #ffffff;
+  --color-on-surface-variant: #444653;
+  --color-tertiary: #611e00;
+  --color-primary-fixed: #dde1ff;
+  --color-on-tertiary-fixed-variant: #802a00;
+  --color-tertiary-container: #872d00;
+  --color-on-error-container: #93000a;
+  --color-surface-bright: #faf8ff;
+  --color-on-primary-fixed-variant: #173bab;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #a8b8ff;
+  --color-secondary-fixed: #d7e2ff;
+  --color-on-error: #ffffff;
+  --color-surface-dim: #d2d9f4;
+  --color-inverse-surface: #283044;
+  --color-on-secondary-fixed-variant: #2c4674;
+  --color-tertiary-fixed: #ffdbce;
+  --color-surface: #faf8ff;
+  --color-tertiary-fixed-dim: #ffb59a;
+  --color-primary-fixed-dim: #b8c4ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #e2e7ff;
+  --color-secondary: #455e8d;
+  --color-surface-variant: #dae2fd;
+  --color-on-surface: #131b2e;
+  --color-primary-container: #1e40af;
+  --color-on-secondary-fixed: #001b3f;
+  --color-on-primary-fixed: #001453;
+  --color-on-background: #131b2e;
+  --color-inverse-primary: #b8c4ff;
+  --color-on-tertiary-container: #ffa583;
+  --color-on-secondary-container: #3b5482;
+  --color-inverse-on-surface: #eef0ff;
+  --color-outline-variant: #c4c5d5;
+  --color-background: #faf8ff;
+  --color-on-tertiary-fixed: #380d00;
+  --color-surface-container: #eaedff;
+  --color-on-tertiary: #ffffff;
+  --color-outline: #757684;
+  --color-surface-container-low: #f2f3ff;
+  --color-surface-container-highest: #dae2fd;
+  --color-surface-tint: #3755c3;
+  --color-primary: #00288e;
+  --color-secondary-container: #b0caff;
+
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  --spacing-margin-md: 1.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-2xl: 2rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-gutter: 1rem;
+  --spacing-space-lg: 1rem;
+  --spacing-margin-lg: 2rem;
+  --spacing-gutter-lg: 1.5rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-margin: 1rem;
+
+  --font-headline-xl: "Inter", sans-serif;
+  --font-headline-lg: "Inter", sans-serif;
+  --font-headline-md: "Inter", sans-serif;
+  --font-headline-sm: "Inter", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+  --font-body-sm: "Inter", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-label-sm: "Inter", sans-serif;
+  --font-code-sm: "JetBrains Mono", monospace;
+  --font-code-xs: "JetBrains Mono", monospace;
+
+  --text-headline-xl: 2rem;
+  --text-headline-xl--line-height: 2.5rem;
+  --text-headline-xl--letter-spacing: -0.025em;
+  --text-headline-lg: 1.5rem;
+  --text-headline-lg--line-height: 2rem;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-md: 1.25rem;
+  --text-headline-md--line-height: 1.75rem;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-sm: 1rem;
+  --text-headline-sm--line-height: 1.5rem;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.5rem;
+  --text-body-md: 0.875rem;
+  --text-body-md--line-height: 1.25rem;
+  --text-body-sm: 0.75rem;
+  --text-body-sm--line-height: 1rem;
+  --text-label-md: 0.875rem;
+  --text-label-md--line-height: 1.25rem;
+  --text-label-sm: 0.75rem;
+  --text-label-sm--line-height: 1rem;
+  --text-label-sm--letter-spacing: 0.01em;
+  --text-code-sm: 0.75rem;
+  --text-code-sm--line-height: 1.125rem;
+  --text-code-xs: 0.6875rem;
+  --text-code-xs--line-height: 1rem;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    overscroll-behavior: none;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #c4c5d5;
+    border-radius: 3px;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  font-size: inherit;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}

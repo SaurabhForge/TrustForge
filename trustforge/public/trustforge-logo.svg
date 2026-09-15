@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="tfGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="50%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="tfInner" x1="12" y1="10" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A78BFA" />
+      <stop offset="100%" stop-color="#60A5FA" />
+    </linearGradient>
+    <filter id="tfGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Hexagonal Shield -->
+  <path d="M24 3L42 10.5V23C42 33.5 34.5 42.5 24 45C13.5 42.5 6 33.5 6 23V10.5L24 3Z"
+        fill="url(#tfGrad)" stroke="#DDD6FE" stroke-width="1.5" stroke-linejoin="round" />
+
+  <!-- Inner Cryptographic Vault Facet -->
+  <path d="M24 8L37 13.5V23C37 31 31 38 24 40C17 38 11 31 11 23V13.5L24 8Z"
+        fill="#0F172A" fill-opacity="0.25" stroke="url(#tfInner)" stroke-width="1.2" stroke-linejoin="round" />
+
+  <!-- Decentralized Blockchain Nodes & Connectors -->
+  <!-- Top Node -->
+  <circle cx="24" cy="15" r="3" fill="#FFFFFF" />
+  <!-- Left Node -->
+  <circle cx="17" cy="27" r="2.8" fill="#A78BFA" />
+  <!-- Right Node -->
+  <circle cx="31" cy="27" r="2.8" fill="#60A5FA" />
+  <!-- Center Core Node -->
+  <circle cx="24" cy="24" r="3.5" fill="#38BDF8" filter="url(#tfGlow)" />
+  <circle cx="24" cy="24" r="1.8" fill="#FFFFFF" />
+  <!-- Bottom Anchor Node -->
+  <circle cx="24" cy="34" r="2.5" fill="#C4B5FD" />
+
+  <!-- Connection Links -->
+  <line x1="24" y1="15" x2="24" y2="24" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="17" y1="27" x2="24" y2="24" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="31" y1="27" x2="24" y2="24" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="24" y1="24" x2="24" y2="34" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="17" y1="27" x2="24" y2="34" stroke="#A78BFA" stroke-width="1.2" stroke-dasharray="2 2" />
+  <line x1="31" y1="27" x2="24" y2="34" stroke="#60A5FA" stroke-width="1.2" stroke-dasharray="2 2" />
+</svg>

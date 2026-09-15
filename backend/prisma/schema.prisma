@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  walletAddress  String    @unique @map("wallet_address")
+  nonce          String    @default("")
+  nonceExpiresAt DateTime? @map("nonce_expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  identity       Identity?
+  sessions       Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Identity {
+  id              String         @id @default(uuid())
+  tfId            String         @unique @map("tf_id")
+  did             String         @unique
+  controllerName  String         @map("controller_name")
+  walletAddress   String?        @map("wallet_address")
+  method          String         @default("did:key")
+  keyType         String         @map("key_type")
+  publicKey       String?        @map("public_key")
+  status          IdentityStatus @default(ACTIVE)
+  complianceScore Int            @default(0) @map("compliance_score")
+  txHash          String?        @map("tx_hash")
+  blockNumber     String?        @map("block_number")
+  metadataHash    String?        @map("metadata_hash")
+  ipfsCid         String?        @map("ipfs_cid")
+  lastSeenAt      DateTime?      @map("last_seen_at")
+  userId          String?        @unique @map("user_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  user            User?          @relation(fields: [userId], references: [id])
+  roles           IdentityRole[]
+  assets          Asset[]
+  issuedAssets    Asset[]        @relation("IssuerIdentity")
+  verifications   Verification[]
+  auditEvents     AuditEvent[]
+
+  @@map("identities")
+}
+
+enum IdentityStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  REVOKED
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  displayName String           @map("display_name")
+  color       String           @default("bg-surface-container-high text-on-surface-variant")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  identities  IdentityRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model IdentityRole {
+  id         String   @id @default(uuid())
+  identityId String   @map("identity_id")
+  roleId     String   @map("role_id")
+  grantedBy  String?  @map("granted_by")
+  grantedAt  DateTime @default(now()) @map("granted_at")
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([identityId, roleId])
+  @@map("identity_roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  description String
+  createdAt   DateTime         @default(now()) @map("created_at")
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Asset {
+  id               String           @id @default(uuid())
+  assetId          String           @unique @map("asset_id")
+  name             String
+  assetType        AssetType        @map("asset_type")
+  description      String?
+  ownerDid         String?          @map("owner_did")
+  issuerDid        String?          @map("issuer_did")
+  ownerIdentityId  String?          @map("owner_identity_id")
+  issuerIdentityId String?          @map("issuer_identity_id")
+  status           AssetStatus      @default(VALID)
+  tokenId          String?          @map("token_id")
+  txHash           String?          @map("tx_hash")
+  blockNumber      String?          @map("block_number")
+  metadataHash     String?          @map("metadata_hash")
+  ipfsCid          String?          @map("ipfs_cid")
+  metadataUri      String?          @map("metadata_uri")
+  transferable     Boolean          @default(true)
+  proofType        String?          @map("proof_type")
+  circuit          String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  expiresAt        DateTime?        @map("expires_at")
+  ownerIdentity    Identity?        @relation(fields: [ownerIdentityId], references: [id])
+  issuerIdentity   Identity?        @relation("IssuerIdentity", fields: [issuerIdentityId], references: [id])
+  ownerships       AssetOwnership[]
+  verifications    Verification[]
+  auditEvents      AuditEvent[]
+
+  @@map("assets")
+}
+
+enum AssetType {
+  DIGITAL_CREDENTIAL
+  CERTIFICATE
+  LICENSE
+  EQUIPMENT
+  DOCUMENT
+  ACCESS_BADGE
+  TRAINING_RECORD
+  SOFTWARE_LICENSE
+  OTHER
+}
+
+enum AssetStatus {
+  VALID
+  PENDING
+  SUSPENDED
+  REVOKED
+  EXPIRED
+}
+
+model AssetOwnership {
+  id            String   @id @default(uuid())
+  assetId       String   @map("asset_id")
+  ownerDid      String   @map("owner_did")
+  fromDid       String?  @map("from_did")
+  txHash        String?  @map("tx_hash")
+  blockNumber   String?  @map("block_number")
+  transferredAt DateTime @default(now()) @map("transferred_at")
+  asset         Asset    @relation(fields: [assetId], references: [id])
+
+  @@map("asset_ownerships")
+}
+
+model Verification {
+  id         String             @id @default(uuid())
+  vjId       String             @unique @map("vj_id")
+  credential String
+  subjectId  String?            @map("subject_id")
+  issuer     String?
+  proofType  String?            @map("proof_type")
+  result     VerificationResult
+  latencyMs  Int?               @map("latency_ms")
+  txHash     String?            @map("tx_hash")
+  identityId String?            @map("identity_id")
+  assetId    String?            @map("asset_id")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  identity   Identity?          @relation(fields: [identityId], references: [id])
+  asset      Asset?             @relation(fields: [assetId], references: [id])
+
+  @@map("verifications")
+}
+
+enum VerificationResult {
+  VERIFIED
+  PENDING
+  FAILED
+  REVOKED
+}
+
+model ZkProof {
+  id           String      @id @default(uuid())
+  proofId      String      @unique @map("proof_id")
+  proofType    String      @map("proof_type")
+  status       ProofStatus @default(VALID)
+  circuit      String?
+  publicInputs Int?        @map("public_inputs")
+  proofSizeKb  Float?      @map("proof_size_kb")
+  latencyMs    Int?        @map("latency_ms")
+  generatedAt  DateTime    @default(now()) @map("generated_at")
+  verifiedAt   DateTime?   @map("verified_at")
+
+  @@map("zk_proofs")
+}
+
+enum ProofStatus {
+  VALID
+  INVALID
+  EXPIRED
+}
+
+model AuditEvent {
+  id              String    @id @default(uuid())
+  aeId            String    @unique @map("ae_id")
+  eventType       String    @map("event_type")
+  actor           String
+  actorDid        String?   @map("actor_did")
+  actorWallet     String?   @map("actor_wallet")
+  target          String
+  txHash          String?   @map("tx_hash")
+  blockNumber     String?   @map("block_number")
+  contractAddress String?   @map("contract_address")
+  status          String    @default("Verified")
+  eventData       Json?     @map("event_data")
+  identityId      String?   @map("identity_id")
+  assetId         String?   @map("asset_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  identity        Identity? @relation(fields: [identityId], references: [id])
+  asset           Asset?    @relation(fields: [assetId], references: [id])
+
+  @@map("audit_events")
+}
+
+model BlockchainTransaction {
+  id              String   @id @default(uuid())
+  txHash          String   @unique @map("tx_hash")
+  blockNumber     BigInt?  @map("block_number")
+  contractAddress String?  @map("contract_address")
+  functionName    String?  @map("function_name")
+  status          String   @default("confirmed")
+  gasUsed         BigInt?  @map("gas_used")
+  data            Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("blockchain_transactions")
+}
+
+model QuorumRequest {
+  id        String   @id @default(uuid())
+  qrId      String   @unique @map("qr_id")
+  action    String
+  threshold String
+  signed    Int      @default(0)
+  requestor String
+  expiresAt DateTime @map("expires_at")
+  urgency   String   @default("medium")
+  status    String   @default("Pending")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("quorum_requests")
+}
+
+model Incident {
+  id         String   @id @default(uuid())
+  incidentId String   @unique @map("incident_id")
+  title      String
+  severity   String
+  count      String
+  eta        String
+  status     String   @default("Pending")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("incidents")
+}
