@@ -1,7 +1,10 @@
 # TrustForge API Documentation
 
 **Version**: 1.0.0  
-**Base URL**: `http://localhost:3001/api`  
+**Production Base URL**: `https://trustforge-backend-wpib.onrender.com/api`  
+**Development Base URL**: `http://localhost:3001/api`  
+**Live Frontend Web App**: `https://trustforge-frontend-bk6d.onrender.com`  
+**Health Check**: `https://trustforge-backend-wpib.onrender.com/health`  
 **Standard Response Format**:
 ```json
 {

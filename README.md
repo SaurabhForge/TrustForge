@@ -5,8 +5,18 @@
 [![Node.js](https://img.shields.io/badge/Node.js-v20+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb.svg)](https://react.dev/)
 [![OpenZeppelin](https://img.shields.io/badge/OpenZeppelin-Contracts%20v5-4e5ee4.svg)](https://openzeppelin.com/)
+[![Render Frontend](https://img.shields.io/badge/Render%20Frontend-Live%20(200%20OK)-2ea44f.svg?style=flat-square&logo=render)](https://trustforge-frontend-bk6d.onrender.com)
+[![Render Backend API](https://img.shields.io/badge/Render%20API-Live%20(200%20OK)-007acc.svg?style=flat-square&logo=render)](https://trustforge-backend-wpib.onrender.com/health)
 
-TrustForge is a high-assurance, enterprise-grade decentralized identity (DID), role-based access control (RBAC), and digital asset management platform engineered specifically for **Smart India Hackathon 2026 Problem Statement SIH26125** — *"Blockchain-Based Secure Platform for Identity, Access Control, and Digital Asset Management."*
+---
+
+### 🌐 Live Production Deployments & APIs
+
+| Service | Environment | Live URL | Status |
+|---|---|---|---|
+| **Frontend Web App (SPA)** | Render CDN | **[https://trustforge-frontend-bk6d.onrender.com](https://trustforge-frontend-bk6d.onrender.com)** | 🟢 `Live (200 OK)` |
+| **Backend REST API** | Render Node.js | **[https://trustforge-backend-wpib.onrender.com](https://trustforge-backend-wpib.onrender.com)** | 🟢 `Live (200 OK)` |
+| **Service Health Check** | Render Engine | **[https://trustforge-backend-wpib.onrender.com/health](https://trustforge-backend-wpib.onrender.com/health)** | 🟢 `{"status":"ok"}` |
 
 ---
 
