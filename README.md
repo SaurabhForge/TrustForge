@@ -139,12 +139,12 @@ npx hardhat test
 
 ---
 
-## ☁️ Cloud Deployment (Render)
+## ☁️ Cloud Deployment (Render & AWS Amplify)
 
-TrustForge is pre-configured with **Infrastructure-as-Code** for rapid cloud deployment on [Render](https://render.com) using `render.yaml`.
+TrustForge is pre-configured with **Infrastructure-as-Code** for rapid multi-cloud deployment:
 
-- **Blueprint Deployment**: Automatically provisions the managed PostgreSQL database, the Node.js Express backend API web service, and the Vite React frontend static site.
-- **Step-by-Step Guide**: See the [Render Deployment Guide](docs/RENDER_DEPLOYMENT.md) for full instructions, environment variable configurations, and verification checklists.
+- **Render (Full-Stack Blueprint)**: Provisions PostgreSQL database, Express API Web Service, and Vite SPA via `render.yaml`. See [Render Deployment Guide](docs/RENDER_DEPLOYMENT.md).
+- **AWS Amplify Hosting (Global Edge CDN)**: Global CloudFront edge deployment for the frontend application with CI/CD from GitHub. See [AWS Amplify Deployment Guide](docs/AWS_AMPLIFY_DEPLOYMENT.md).
 
 ---
 
