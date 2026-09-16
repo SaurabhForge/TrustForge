@@ -4,6 +4,15 @@ This guide explains how to deploy both the **TrustForge Backend API** and the **
 
 ---
 
+## 🌟 Live Production Services
+
+| Component | Status | Production URL | Render Dashboard |
+|---|---|---|---|
+| **Frontend Web App (SPA)** | 🟢 **Live** (200 OK) | [https://trustforge-frontend-bk6d.onrender.com](https://trustforge-frontend-bk6d.onrender.com) | [srv-dal1iqv40ujc7397dro0](https://dashboard.render.com/static/srv-dal1iqv40ujc7397dro0) |
+| **Backend REST API** | 🟢 **Live** (200 OK) | [https://trustforge-backend-wpib.onrender.com](https://trustforge-backend-wpib.onrender.com) | [srv-dal1iodg1s2s73dtlo80](https://dashboard.render.com/web/srv-dal1iodg1s2s73dtlo80) |
+
+---
+
 ## Architecture Overview on Render
 
 ```
