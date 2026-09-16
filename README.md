@@ -139,6 +139,15 @@ npx hardhat test
 
 ---
 
+## ☁️ Cloud Deployment (Render)
+
+TrustForge is pre-configured with **Infrastructure-as-Code** for rapid cloud deployment on [Render](https://render.com) using `render.yaml`.
+
+- **Blueprint Deployment**: Automatically provisions the managed PostgreSQL database, the Node.js Express backend API web service, and the Vite React frontend static site.
+- **Step-by-Step Guide**: See the [Render Deployment Guide](docs/RENDER_DEPLOYMENT.md) for full instructions, environment variable configurations, and verification checklists.
+
+---
+
 ## 🔒 Security & Cryptographic Guarantees
 
 - **No Passwords**: Web3 wallet authentication via EIP-191 challenge-response.

@@ -3,6 +3,8 @@
  * Wraps localStorage JWT storage and provides SIWE flow helpers.
  */
 
+import { API_BASE } from './api';
+
 const TOKEN_KEY = 'tf_jwt';
 const USER_KEY = 'tf_user';
 const WALLET_KEY = 'tf_wallet';
@@ -61,7 +63,7 @@ export async function loginAsPerson({ name, email, role, avatar, walletAddress, 
   const userAvatar = avatar || (isSaurabh ? '/admin-avatar.png' : '/default-avatar.svg');
 
   try {
-    const res = await fetch('/api/auth/persona-login', {
+    const res = await fetch(`${API_BASE}/auth/persona-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, role, avatar: userAvatar, walletAddress, tfId }),
@@ -174,7 +176,7 @@ export async function siwLogin(onStatus) {
   } catch {}
 
   onStatus?.('Requesting nonce from server…');
-  const nonceRes = await fetch('/api/auth/nonce', {
+  const nonceRes = await fetch(`${API_BASE}/auth/nonce`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ address }),
@@ -195,7 +197,7 @@ export async function siwLogin(onStatus) {
 
   // Step 4: Verify
   onStatus?.('Verifying signature…');
-  const verifyRes = await fetch('/api/auth/verify', {
+  const verifyRes = await fetch(`${API_BASE}/auth/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ address, signature }),

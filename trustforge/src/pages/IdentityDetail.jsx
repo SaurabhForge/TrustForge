@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import StatusBadge from '../components/StatusBadge'
 import HashViewer from '../components/HashViewer'
-import { getIdentity, revokeIdentity, rotateKey, issueVC } from '../services/api'
+import { getIdentity, revokeIdentity, rotateKey, issueVC, API_BASE } from '../services/api'
 
 const defaultIdentity = {
   id: 'TF-10482',
@@ -55,7 +55,7 @@ export default function IdentityDetail() {
   const handleViewDidDoc = async () => {
     setLoadingDidDoc(true)
     try {
-      const res = await fetch(`/api/identities/${data.id}/did-document`)
+      const res = await fetch(`${API_BASE}/identities/${data.id}/did-document`)
       const json = await res.json()
       setDidDocJson(json.data || json)
       setShowDidModal(true)
@@ -69,7 +69,7 @@ export default function IdentityDetail() {
   const handleViewVcDoc = async (vcId) => {
     setLoadingVcDoc(true)
     try {
-      const res = await fetch(`/api/assets/${vcId}/vc`)
+      const res = await fetch(`${API_BASE}/assets/${vcId}/vc`)
       const json = await res.json()
       setVcDocJson(json.data || json)
       setShowVcModal(true)

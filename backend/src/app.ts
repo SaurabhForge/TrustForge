@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import fs from 'fs';
 import { config } from './config/env';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
@@ -39,8 +41,32 @@ app.use(helmet({
   xDnsPrefetchControl: { allow: false },
 }));
 
+const corsOriginSetting = config.cors.origin;
+const allowedOrigins = corsOriginSetting
+  ? corsOriginSetting.split(',').map((o) => o.trim())
+  : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'];
+
 app.use(cors({
-  origin: config.cors.origin,
+  origin: (requestOrigin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!requestOrigin) return callback(null, true);
+
+    // If wildcard or explicitly in allowed list
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(requestOrigin)) {
+      return callback(null, true);
+    }
+
+    // Allow Render deployments (*.onrender.com) and localhost
+    if (
+      requestOrigin.endsWith('.onrender.com') ||
+      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(requestOrigin)
+    ) {
+      return callback(null, true);
+    }
+
+    // Default allow request origin to ensure seamless interoperability
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -87,6 +113,26 @@ app.use('/api/verifications', verificationRoutes);
 app.use('/api/verify', verificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/system', systemRoutes);
+
+// ─── Frontend Static Assets (Production SPA Support) ─────────────────────────
+const potentialDistPaths = [
+  path.resolve(__dirname, '../../trustforge/dist'),
+  path.resolve(__dirname, '../public'),
+  path.resolve(process.cwd(), 'trustforge/dist'),
+  path.resolve(process.cwd(), 'dist/public'),
+  path.resolve(process.cwd(), 'public'),
+];
+const distPath = potentialDistPaths.find((p) => fs.existsSync(p));
+
+if (distPath) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // ─── 404 & Error Handling ───────────────────────────────────────────────────
 app.use(notFound);

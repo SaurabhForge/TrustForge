@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || '';
+export const API_BASE = rawApiUrl ? `${rawApiUrl.replace(/\/$/, '')}/api` : '/api';
 
 export async function request(endpoint, options = {}) {
   try {
@@ -205,7 +206,7 @@ export async function getSystemHealth() {
 
 export async function downloadSystemBackup() {
   const token = localStorage.getItem('tf_jwt') || localStorage.getItem('tf_token');
-  const res = await fetch('/api/system/backup', {
+  const res = await fetch(`${API_BASE}/system/backup`, {
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
   const blob = await res.blob();

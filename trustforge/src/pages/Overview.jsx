@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import StatusBadge from '../components/StatusBadge'
-import { getOverview } from '../services/api'
+import { getOverview, API_BASE } from '../services/api'
 
 const defaultMetrics = [
   { label: 'Total Identities', value: '12,842', icon: 'badge', trend: '+3.8%', sub: 'W3C DID v1.0', trendColor: 'text-emerald-700' },
@@ -46,7 +46,7 @@ export default function Overview() {
       if (data?.blockchain?.blockNumber) setBlockNumber('#' + data.blockchain.blockNumber)
 
       // Fetch live blockchain node metrics
-      const bcRes = await fetch('/api/dashboard/blockchain')
+      const bcRes = await fetch(`${API_BASE}/dashboard/blockchain`)
       const bcData = await bcRes.json()
       if (bcData?.success && bcData.data) {
         setBlockchainStats(bcData.data)

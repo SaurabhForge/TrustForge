@@ -1,0 +1,15 @@
+{
+  "name": "trustforge-workspace",
+  "version": "1.0.0",
+  "description": "TrustForge Enterprise Identity Platform - Sovereign Enterprise DID & VC Infrastructure",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix backend && npm run build --prefix trustforge",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix trustforge",
+    "start": "npm start --prefix backend",
+    "start:backend": "npm start --prefix backend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix trustforge"
+  }
+}
