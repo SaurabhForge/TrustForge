@@ -20,7 +20,7 @@ export interface AuthRequest extends Request {
 
 export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = (req as any).headers?.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return sendError(res, 'Authentication required', 'UNAUTHORIZED', 401);
     }
