@@ -1,0 +1,85 @@
+# =============================================================================
+# TrustForge Enterprise — Open-Source Orchestration
+# Compatible with AWS Finch CLI (`finch compose up`) & Docker Compose (`docker compose up`)
+# Meets Hackathon Tracks:
+#   - "Containers: Finch, EKS (Build it)"
+#   - "Serverless: SAM CLI, LocalStack (Build it)"
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Relational Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: trustforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: trustforge
+      POSTGRES_PASSWORD: trustforge_secure_dev_password
+      POSTGRES_DB: trustforge_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trustforge -d trustforge_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. LocalStack AWS Cloud Emulator (Local Lambda, S3, Cognito, API Gateway)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: trustforge-localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=lambda,s3,cognito-idp,apigateway,iam,sts
+      - AWS_DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  # 3. TrustForge Enterprise API Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trustforge-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DATABASE_URL=postgresql://trustforge:trustforge_secure_dev_password@postgres:5432/trustforge_db?schema=public
+      - JWT_SECRET=trustforge_enterprise_jwt_secret_finch_local
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_REGION=us-east-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+
+  # 4. TrustForge Enterprise Web Frontend
+  frontend:
+    build:
+      context: ./trustforge
+      dockerfile: Dockerfile
+    container_name: trustforge-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  localstack_data:

@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { getRoles, getPermissions, assignRole, revokeRole, createRole, signQuorumRequest, rejectQuorumRequest } from './access.controller';
+import { getRoles, getPermissions, assignRole, revokeRole, createRole, signQuorumRequest, rejectQuorumRequest, getCedarPolicies, evaluateCedarPolicy } from './access.controller';
 import { requireAuth } from '../../middleware/auth';
 
 const router = Router();
 
 router.get('/roles', getRoles);
 router.get('/permissions', getPermissions);
+
+// AWS Open-Source Cedar Authorization Engine Endpoints
+router.get('/cedar/policies', getCedarPolicies);
+router.post('/cedar/evaluate', evaluateCedarPolicy);
 
 // Protected mutation endpoints
 router.post('/roles', requireAuth, createRole);

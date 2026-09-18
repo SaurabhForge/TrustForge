@@ -107,6 +107,17 @@ export async function getPermissions() {
   return request('/access/permissions');
 }
 
+export async function getCedarPolicies() {
+  return request('/access/cedar/policies');
+}
+
+export async function evaluateCedarPolicy(payload) {
+  return request('/access/cedar/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function assignRole(identityId, roleName) {
   return request('/access/roles/assign', {
     method: 'POST',

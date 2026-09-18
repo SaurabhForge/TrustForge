@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import StatusBadge from '../components/StatusBadge'
-import { getRoles, createRole, signQuorum, rejectQuorum } from '../services/api'
+import { getRoles, createRole, signQuorum, rejectQuorum, getCedarPolicies, evaluateCedarPolicy } from '../services/api'
 
 const defaultRoles = [
   { name: 'Super Admin', members: 2, permissions: ['all'], status: 'Active', color: 'bg-red-100 text-red-800' },
@@ -49,6 +49,16 @@ export default function AccessControl() {
     resources: ['DID Registry', 'Verifiable Credentials'],
   })
 
+  // AWS Open-Source Cedar Policy Engine State
+  const [cedarPolicies, setCedarPolicies] = useState([])
+  const [rawCedar, setRawCedar] = useState('')
+  const [showRawCedar, setShowRawCedar] = useState(false)
+  const [cedarRole, setCedarRole] = useState('SECURITY_ADMIN')
+  const [cedarStatus, setCedarStatus] = useState('ACTIVE')
+  const [cedarAction, setCedarAction] = useState('rotateKey')
+  const [cedarDecision, setCedarDecision] = useState(null)
+  const [evaluatingCedar, setEvaluatingCedar] = useState(false)
+
   const loadData = () => {
     getRoles()
       .then((res) => {
@@ -56,11 +66,44 @@ export default function AccessControl() {
         if (res?.quorumRequests?.length) setQuorumList(res.quorumRequests)
       })
       .catch(() => {})
+
+    getCedarPolicies()
+      .then((res) => {
+        if (res?.policies) setCedarPolicies(res.policies)
+        if (res?.rawCedar) setRawCedar(res.rawCedar)
+      })
+      .catch(() => {})
   }
 
   useEffect(() => {
     loadData()
   }, [])
+
+  const handleEvaluateCedar = async () => {
+    setEvaluatingCedar(true)
+    try {
+      const res = await evaluateCedarPolicy({
+        principal: {
+          role: cedarRole,
+          status: cedarStatus,
+          did: 'did:trustforge:demo-user-001',
+        },
+        action: cedarAction,
+        resource: {
+          type: 'Asset',
+          ownerDid: 'did:trustforge:demo-user-001',
+        },
+      })
+      setCedarDecision(res)
+    } catch (err) {
+      setCedarDecision({
+        decision: 'ERROR',
+        diagnostics: { reason: err.message || 'Evaluation failed' },
+      })
+    } finally {
+      setEvaluatingCedar(false)
+    }
+  }
 
   const handleCreateRole = async (e) => {
     e.preventDefault()
@@ -301,6 +344,179 @@ export default function AccessControl() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* AWS Open-Source Cedar Policy Engine Panel */}
+      <div className="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden border border-outline-variant/30">
+        <div className="px-space-md py-4 bg-surface-container-low/40 border-b border-outline-variant/20 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <span className="material-symbols-outlined text-[22px]">policy</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">AWS Cedar Policy Engine</span>
+                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-code-xs text-[11px] font-medium border border-primary/20">
+                  Cedar v3.0 Spec • Hackathon Policy Engine
+                </span>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Open-source policy engine with strict guardrails, formal verification, and default-deny authorization.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowRawCedar(!showRawCedar)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">code</span>
+            <span>{showRawCedar ? 'Hide Raw Cedar' : 'View Cedar DSL (.cedar)'}</span>
+          </button>
+        </div>
+
+        {/* Raw Cedar DSL Drawer */}
+        {showRawCedar && (
+          <div className="p-4 bg-surface-container-lowest border-b border-outline-variant/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">cedar/trustforge.cedar</span>
+              <span className="font-code-xs text-[11px] text-outline">AWS Open Source Cedar DSL</span>
+            </div>
+            <pre className="p-4 rounded-lg bg-surface-container-high text-on-surface font-code-xs text-[12px] overflow-x-auto border border-outline-variant/30 leading-relaxed">
+              {rawCedar || `// Loading Cedar specification...`}
+            </pre>
+          </div>
+        )}
+
+        {/* Live Simulator & Policy Grid */}
+        <div className="p-space-md grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Interactive Evaluation Tester */}
+          <div className="lg:col-span-5 bg-surface-container-low/30 p-4 rounded-xl border border-outline-variant/20 flex flex-col gap-4">
+            <div className="flex items-center gap-2 text-on-surface font-medium">
+              <span className="material-symbols-outlined text-[18px] text-primary">play_circle</span>
+              <span>Live Policy Evaluator</span>
+            </div>
+            <p className="text-body-sm text-on-surface-variant">
+              Simulate real-time authorization queries evaluated by the backend Cedar policy evaluator.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="font-label-xs text-[11px] text-on-surface-variant block mb-1 uppercase font-semibold">Principal Role</label>
+                <select
+                  value={cedarRole}
+                  onChange={(e) => setCedarRole(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-on-surface text-body-sm"
+                >
+                  <option value="ADMIN">ADMIN (Super Admin)</option>
+                  <option value="SECURITY_ADMIN">SECURITY_ADMIN (Keys & Quorum)</option>
+                  <option value="AUDITOR">AUDITOR (Read-only Audit)</option>
+                  <option value="VERIFIER">VERIFIER (Cryptographic Verification)</option>
+                  <option value="USER">USER (Standard Account)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-label-xs text-[11px] text-on-surface-variant block mb-1 uppercase font-semibold">Principal Identity Status</label>
+                <select
+                  value={cedarStatus}
+                  onChange={(e) => setCedarStatus(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-on-surface text-body-sm"
+                >
+                  <option value="ACTIVE">ACTIVE (Good Standing)</option>
+                  <option value="SUSPENDED">SUSPENDED (Temporary Hold)</option>
+                  <option value="REVOKED">REVOKED (Revoked Cryptographic DID)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-label-xs text-[11px] text-on-surface-variant block mb-1 uppercase font-semibold">Target Action</label>
+                <select
+                  value={cedarAction}
+                  onChange={(e) => setCedarAction(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-on-surface text-body-sm"
+                >
+                  <option value="rotateKey">rotateKey (Mutating Privileged)</option>
+                  <option value="signQuorum">signQuorum (Mutating Privileged)</option>
+                  <option value="mintAsset">mintAsset (Mutating)</option>
+                  <option value="transferAsset">transferAsset (Mutating)</option>
+                  <option value="updatePolicy">updatePolicy (Privileged)</option>
+                  <option value="viewSecurityDashboard">viewSecurityDashboard (Read)</option>
+                  <option value="viewAuditTrail">viewAuditTrail (Read)</option>
+                  <option value="verifyCredential">verifyCredential (Cryptographic)</option>
+                  <option value="verifyZkProof">verifyZkProof (Cryptographic)</option>
+                  <option value="readOwnIdentity">readOwnIdentity (Self Read)</option>
+                  <option value="deleteSystemData">deleteSystemData (Undefined / Arbitrary)</option>
+                </select>
+              </div>
+
+              <button
+                onClick={handleEvaluateCedar}
+                disabled={evaluatingCedar}
+                className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-label-md text-label-md shadow-sm disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                <span>{evaluatingCedar ? 'Evaluating...' : 'Evaluate Against Cedar Policies'}</span>
+              </button>
+            </div>
+
+            {/* Live Result Callout */}
+            {cedarDecision && (
+              <div className={`mt-2 p-3.5 rounded-lg border ${cedarDecision.decision === 'ALLOW' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-label-sm text-[12px] font-semibold text-on-surface">Cedar Engine Decision:</span>
+                  <span className={`px-2.5 py-0.5 rounded-full font-bold text-xs ${cedarDecision.decision === 'ALLOW' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {cedarDecision.decision}
+                  </span>
+                </div>
+                <p className="font-body-sm text-[12px] text-on-surface-variant leading-relaxed">
+                  {cedarDecision.diagnostics?.reason}
+                </p>
+                {cedarDecision.determiningPolicies?.length > 0 && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className="font-code-xs text-[10px] text-outline uppercase">Determining Policy:</span>
+                    {cedarDecision.determiningPolicies.map((p) => (
+                      <span key={p} className="px-1.5 py-0.5 rounded bg-surface-container-high font-code-xs text-[10px] text-primary font-medium">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Active Cedar Rules Specification */}
+          <div className="lg:col-span-7 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-label-sm text-label-sm text-on-surface font-semibold">Active Cedar Rules (AWS Open Source)</span>
+              <span className="font-code-xs text-[11px] text-outline">6 Enforced Policies</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(cedarPolicies.length > 0 ? cedarPolicies : [
+                { id: 'policy-1-superadmin', type: 'permit', description: 'Super Admin has unconditional authorization across all identities and assets', principal: 'TrustForge::Role::"ADMIN"', action: '*' },
+                { id: 'policy-2-security-admin', type: 'permit', description: 'Security Admins can rotate keys, update policies, and sign quorums', principal: 'TrustForge::Role::"SECURITY_ADMIN"', action: 'rotateKey, updatePolicy...' },
+                { id: 'policy-3-auditor', type: 'permit', description: 'Auditors have read-only access to audit trail and integrity proofs', principal: 'TrustForge::Role::"AUDITOR"', action: 'viewAuditTrail...' },
+                { id: 'policy-4-verifier', type: 'permit', description: 'Authorized Verifiers can execute cryptographic VC and ZK proofs', principal: 'TrustForge::Role::"VERIFIER"', action: 'verifyCredential, verifyZkProof...' },
+                { id: 'policy-5-user-self-read', type: 'permit', description: 'Standard Users can read their own credentials and assets', principal: 'TrustForge::User', action: 'readOwnIdentity, readOwnAssets' },
+                { id: 'policy-6-strict-guardrail', type: 'forbid', description: 'Strict Guardrail: Revoked/suspended identities forbidden from mutating actions', principal: 'Any', action: 'mintAsset, transferAsset, rotateKey...' },
+              ]).map((pol) => (
+                <div key={pol.id} className="p-3 rounded-lg bg-surface-container-low/20 border border-outline-variant/20 flex flex-col justify-between gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-xs text-[11px] font-semibold text-secondary">{pol.id}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${pol.type === 'forbid' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                      {pol.type}
+                    </span>
+                  </div>
+                  <p className="font-body-sm text-[12px] text-on-surface-variant leading-snug">{pol.description}</p>
+                  <div className="pt-1.5 border-t border-outline-variant/15 flex items-center justify-between text-[10px] text-outline font-code-xs">
+                    <span>Principal: {pol.principal}</span>
+                    <span>Action: {Array.isArray(pol.action) ? pol.action.join(', ') : pol.action}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

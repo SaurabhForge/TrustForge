@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TrustForge Enterprise — Serverless Architecture
+  Matches Hackathon Tracks:
+    - "Serverless: SAM CLI, LocalStack (Build it)"
+    - "Serverless: API Gateway, Lambda (Ship it)"
+    - "Auth and policy: Cognito (Ship it)"
+    - "Auth and policy: Cedar (Build it)"
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        NODE_ENV: production
+        APP_NAME: TrustForge-Enterprise
+
+Resources:
+  # 1. Amazon Cognito User Pool for Enterprise Identity
+  TrustForgeUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: trustforge-enterprise-users
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+
+  TrustForgeUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: trustforge-web-client
+      UserPoolId: !Ref TrustForgeUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  # 2. AWS HTTP API Gateway
+  TrustForgeHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - "*"
+        AllowOrigins:
+          - "*"
+
+  # 3. TrustForge Backend Core Lambda Function
+  TrustForgeApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: dist/server.handler
+      Events:
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TrustForgeHttpApi
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TrustForgeHttpApi
+            Path: /{proxy+}
+            Method: ANY
+      Environment:
+        Variables:
+          COGNITO_USER_POOL_ID: !Ref TrustForgeUserPool
+          COGNITO_CLIENT_ID: !Ref TrustForgeUserPoolClient
+          CEDAR_POLICY_PATH: cedar/trustforge.cedar
+
+  # 4. AWS Amplify App Definition (CloudFormation Infrastructure as Code)
+  TrustForgeAmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: TrustForge-Frontend
+      Repository: https://github.com/SaurabhForge/TrustForge
+      BuildSpec: |-
+        version: 1
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                - cd trustforge
+                - npm ci
+            build:
+              commands:
+                - npm run build
+          artifacts:
+            baseDirectory: trustforge/dist
+            files:
+              - '**/*'
+          cache:
+            paths:
+              - trustforge/node_modules/**/*
+      CustomRules:
+        - Source: </^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>
+          Target: /index.html
+          Status: '200'
+
+Outputs:
+  HttpApiUrl:
+    Description: "API Gateway Endpoint URL for TrustForge Enterprise"
+    Value: !Sub "https://${TrustForgeHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  CognitoUserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref TrustForgeUserPool
+  CognitoClientId:
+    Description: "Cognito App Client ID"
+    Value: !Ref TrustForgeUserPoolClient
+  AmplifyAppId:
+    Description: "Amplify App ID"
+    Value: !GetAtt TrustForgeAmplifyApp.AppId
