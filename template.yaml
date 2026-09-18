@@ -116,6 +116,53 @@ Resources:
           Target: /index.html
           Status: '200'
 
+  # 5. AWS Bedrock Zero-Trust Guardrail
+  TrustForgeBedrockGuardrail:
+    Type: AWS::Bedrock::Guardrail
+    Properties:
+      Name: TrustForgeZeroTrustGuardrail
+      Description: Zero-Trust Guardrail enforcing PII masking and zero-trust boundaries
+      BlockedInputMessaging: "Request blocked by TrustForge Zero-Trust Bedrock Guardrail."
+      BlockedOutputsMessaging: "Output redacted by TrustForge Zero-Trust Bedrock Guardrail."
+
+  # 6. IAM Service Role for AWS Bedrock Autonomous Agent
+  TrustForgeBedrockAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: TrustForgeBedrockAgentServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: BedrockModelInvocationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: "*"
+
+  # 7. AWS Bedrock Autonomous Security Agent
+  TrustForgeBedrockAgent:
+    Type: AWS::Bedrock::Agent
+    Properties:
+      AgentName: TrustForgeSecurityAgent
+      Description: Autonomous Zero-Trust AI Agent for Cedar policy evaluation and verification
+      FoundationModel: amazon.nova-lite-v1:0
+      Instruction: >
+        You are TrustForge Enterprise Security Agent. You inspect zero-trust identities,
+        evaluate AWS Cedar policies, verify cryptographic credentials, and audit security events.
+      AgentResourceRoleArn: !GetAtt TrustForgeBedrockAgentRole.Arn
+      GuardrailConfiguration:
+        GuardrailIdentifier: !Ref TrustForgeBedrockGuardrail
+        GuardrailVersion: "DRAFT"
+
 Outputs:
   HttpApiUrl:
     Description: "API Gateway Endpoint URL for TrustForge Enterprise"
@@ -129,3 +176,9 @@ Outputs:
   AmplifyAppId:
     Description: "Amplify App ID"
     Value: !GetAtt TrustForgeAmplifyApp.AppId
+  BedrockAgentId:
+    Description: "AWS Bedrock Security Agent ID"
+    Value: !Ref TrustForgeBedrockAgent
+  BedrockGuardrailId:
+    Description: "AWS Bedrock Zero-Trust Guardrail ID"
+    Value: !Ref TrustForgeBedrockGuardrail

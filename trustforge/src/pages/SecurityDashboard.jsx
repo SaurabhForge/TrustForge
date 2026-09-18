@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import StatusBadge from '../components/StatusBadge'
-import { getSecurityDashboard, verifyAuditIntegrity } from '../services/api'
+import { getSecurityDashboard, verifyAuditIntegrity, getBedrockStatus, runBedrockAudit, queryBedrockAgent } from '../services/api'
 
 const defaultSecurityMetrics = [
   { label: 'Decentralized Identities', value: '14,892', trend: '+4.2%', sub: '99.4% Compliant · W3C v1.0', icon: 'badge', trendColor: 'text-emerald-700' },
@@ -37,6 +37,41 @@ export default function SecurityDashboard() {
   const [showReport, setShowReport] = useState(false)
   const pollTimerRef = useRef(null)
 
+  // AWS Bedrock Generative AI & Autonomous Agent State
+  const [bedrockStatus, setBedrockStatus] = useState(null)
+  const [bedrockModel, setBedrockModel] = useState('amazon.nova-lite-v1:0')
+  const [bedrockAudit, setBedrockAudit] = useState(null)
+  const [runningBedrockAudit, setRunningBedrockAudit] = useState(false)
+  const [bedrockQuery, setBedrockQuery] = useState('')
+  const [bedrockQueryResult, setBedrockQueryResult] = useState(null)
+  const [queryingBedrock, setQueryingBedrock] = useState(false)
+
+  const handleBedrockAudit = async () => {
+    setRunningBedrockAudit(true)
+    try {
+      const res = await runBedrockAudit({ modelId: bedrockModel })
+      setBedrockAudit(res)
+    } catch (err) {
+      alert(err.message || 'Bedrock audit failed')
+    } finally {
+      setRunningBedrockAudit(false)
+    }
+  }
+
+  const handleBedrockQuery = async (e) => {
+    e?.preventDefault()
+    if (!bedrockQuery.trim()) return
+    setQueryingBedrock(true)
+    try {
+      const res = await queryBedrockAgent({ query: bedrockQuery.trim(), modelId: bedrockModel })
+      setBedrockQueryResult(res)
+    } catch (err) {
+      alert(err.message || 'Bedrock query failed')
+    } finally {
+      setQueryingBedrock(false)
+    }
+  }
+
   const fetchData = () => {
     getSecurityDashboard()
       .then((res) => {
@@ -49,6 +84,7 @@ export default function SecurityDashboard() {
 
   useEffect(() => {
     fetchData()
+    getBedrockStatus().then(setBedrockStatus).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -231,6 +267,131 @@ export default function SecurityDashboard() {
           <span className="material-symbols-outlined text-[14px] text-emerald-700">shield</span>
           Auto-Attestation: Active
         </span>
+      </div>
+
+      {/* AWS Bedrock AI Security Advisor & Autonomous Agent Console */}
+      <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+        <div className="px-space-md py-4 bg-surface-container-low/40 border-b border-outline-variant/20 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-[22px]">psychology</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-headline-sm text-headline-sm text-on-surface font-semibold">AWS Bedrock AI Security Advisor</span>
+                <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 font-code-xs text-[11px] font-medium border border-indigo-500/20">
+                  Foundation Models • Zero-Trust Guardrails
+                </span>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Autonomous GenAI threat intelligence powered by Amazon Bedrock (Amazon Nova, Anthropic Claude, Amazon Titan).
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={bedrockModel}
+              onChange={(e) => setBedrockModel(e.target.value)}
+              className="px-3 py-1.5 rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-on-surface text-body-sm"
+            >
+              <option value="amazon.nova-lite-v1:0">Amazon Nova Lite (0.4s fast)</option>
+              <option value="anthropic.claude-3-5-sonnet-20240620-v1:0">Anthropic Claude 3.5 Sonnet</option>
+              <option value="amazon.titan-text-express-v1">Amazon Titan Text Express</option>
+            </select>
+            <button
+              onClick={handleBedrockAudit}
+              disabled={runningBedrockAudit}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-label-md text-label-md shadow-sm disabled:opacity-50"
+            >
+              <span className={`material-symbols-outlined text-[18px] ${runningBedrockAudit ? 'animate-spin' : ''}`}>
+                {runningBedrockAudit ? 'sync' : 'auto_awesome'}
+              </span>
+              <span>{runningBedrockAudit ? 'Analyzing...' : 'Run Bedrock AI Audit'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Live Bedrock Audit Results & Query Bar */}
+        <div className="p-space-md flex flex-col gap-4">
+          {/* Bedrock Audit Report */}
+          {bedrockAudit && (
+            <div className="p-4 rounded-xl bg-surface-container-low/30 border border-outline-variant/20 flex flex-col gap-3 animate-fade-in">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-outline-variant/15">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-on-surface text-body-md">Bedrock Intelligence Briefing</span>
+                  <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-code-xs text-[11px]">
+                    Model: {bedrockAudit.modelUsed}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-body-sm text-on-surface-variant font-medium">
+                    Security Score: <span className="font-bold text-emerald-700 text-[14px]">{bedrockAudit.overallSecurityScore}/100</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase">
+                    Threat: {bedrockAudit.threatLevel}
+                  </span>
+                </div>
+              </div>
+              <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                {bedrockAudit.summary}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                {(bedrockAudit.findings || []).map((f) => (
+                  <div key={f.id} className="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/20 flex flex-col justify-between gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-label-xs text-[10px] text-outline uppercase font-semibold">{f.category}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${f.severity === 'OPTIMAL' ? 'bg-emerald-100 text-emerald-800' : f.severity === 'WARNING' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {f.severity}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-on-surface font-medium mt-1 leading-snug">{f.description}</p>
+                    <div className="text-[11px] text-on-surface-variant mt-1 italic">Action: {f.recommendation}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Interactive Autonomous Bedrock Agent Query Box */}
+          <form onSubmit={handleBedrockQuery} className="flex flex-col gap-2">
+            <label className="font-label-sm text-label-sm text-on-surface font-medium flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-indigo-600">forum</span>
+              <span>Ask Bedrock Autonomous Agent (TrustForge Action Groups)</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={bedrockQuery}
+                onChange={(e) => setBedrockQuery(e.target.value)}
+                placeholder="e.g. 'Evaluate Cedar key rotation policy for revoked admin' or 'Assess pending multi-sig quorums'..."
+                className="flex-1 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-lowest text-on-surface text-body-sm focus:outline-none focus:border-indigo-600"
+              />
+              <button
+                type="submit"
+                disabled={queryingBedrock}
+                className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-label-md text-label-md font-semibold disabled:opacity-50"
+              >
+                {queryingBedrock ? 'Consulting Agent...' : 'Query Agent'}
+              </button>
+            </div>
+          </form>
+
+          {/* Bedrock Agent Response */}
+          {bedrockQueryResult && (
+            <div className="p-3.5 rounded-lg bg-indigo-50/50 border border-indigo-200/60 flex flex-col gap-2 animate-fade-in">
+              <div className="flex items-center justify-between text-xs text-indigo-900 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[15px] text-indigo-700">smart_toy</span>
+                  <span>Agent Action Group: <strong>{bedrockQueryResult.actionInvoked}</strong></span>
+                </span>
+                <span className="font-code-xs text-[10px] text-indigo-700">{bedrockQueryResult.agentId}</span>
+              </div>
+              <p className="text-body-sm text-indigo-950 leading-relaxed font-normal">
+                {bedrockQueryResult.response}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Metrics Grid */}

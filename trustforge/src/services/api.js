@@ -238,3 +238,23 @@ export async function restoreSystemBackup(backupData) {
   });
 }
 
+// AWS Bedrock Generative AI & Autonomous Agent
+export async function getBedrockStatus() {
+  return request('/ai/bedrock/status');
+}
+
+export async function runBedrockAudit(payload = {}) {
+  return request('/ai/bedrock/audit', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function queryBedrockAgent(payload = {}) {
+  return request('/ai/bedrock/query', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+

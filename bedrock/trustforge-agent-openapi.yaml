@@ -1,0 +1,97 @@
+openapi: 3.0.0
+info:
+  title: TrustForge Enterprise Bedrock Agent Action Group API
+  version: 1.0.0
+  description: >
+    Action Group API for AWS Bedrock Agents. Enables Bedrock AI Foundation Models
+    (Amazon Nova, Anthropic Claude, Amazon Titan) to inspect zero-trust identities,
+    evaluate Cedar authorization policies, audit compliance streams, and verify
+    cryptographic credentials.
+paths:
+  /access/cedar/evaluate:
+    post:
+      summary: Evaluate an authorization request against AWS Cedar Policies
+      description: Evaluates whether a principal is permitted or forbidden to perform an action on a resource under active Cedar policies.
+      operationId: evaluateCedarPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                principal:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      description: Principal role (e.g., ADMIN, SECURITY_ADMIN, AUDITOR, VERIFIER, USER)
+                    status:
+                      type: string
+                      description: Principal status (e.g., ACTIVE, SUSPENDED, REVOKED)
+                    did:
+                      type: string
+                      description: Decentralized Identifier (DID)
+                action:
+                  type: string
+                  description: Action name (e.g., rotateKey, signQuorum, mintAsset, transferAsset, viewAuditTrail)
+                resource:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    ownerDid:
+                      type: string
+      responses:
+        '200':
+          description: Evaluation decision (ALLOW or DENY) with diagnostic rationale
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  decision:
+                    type: string
+                    enum: [ALLOW, DENY]
+                  determiningPolicies:
+                    type: array
+                    items:
+                      type: string
+                  diagnostics:
+                    type: object
+                    properties:
+                      reason:
+                        type: string
+
+  /dashboard/security:
+    get:
+      summary: Retrieve real-time zero-trust security metrics and telemetry
+      description: Returns counts of active identities, Merkle root anchors, pending multi-sig quorums, and recent audit events.
+      operationId: getSecurityTelemetry
+      responses:
+        '200':
+          description: Operational security metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      type: object
+
+  /audit/events:
+    get:
+      summary: Retrieve immutable audit trail events
+      description: Returns cryptographic audit log events for compliance inspection.
+      operationId: getAuditEvents
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of audit log events

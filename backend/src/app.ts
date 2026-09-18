@@ -17,6 +17,7 @@ import assetRoutes from './modules/assets/assets.routes';
 import verificationRoutes from './modules/verification/verification.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import systemRoutes from './modules/system/system.routes';
+import aiRoutes from './modules/ai/ai.routes';
 
 const app = express();
 
@@ -113,6 +114,7 @@ app.use('/api/verifications', verificationRoutes);
 app.use('/api/verify', verificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ─── Frontend Static Assets (Production SPA Support) ─────────────────────────
 const potentialDistPaths = [
