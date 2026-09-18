@@ -39,13 +39,24 @@ export async function runBedrockAudit(req: Request, res: Response) {
   try {
     const { modelId = 'amazon.nova-lite-v1:0' } = req.body;
 
-    const [identitiesCount, revokedCount, activeCount, recentEvents, quorumCount] = await Promise.all([
-      prisma.identity.count().catch(() => 8),
-      prisma.identity.count({ where: { status: 'Revoked' } }).catch(() => 1),
-      prisma.identity.count({ where: { status: 'Active' } }).catch(() => 5),
-      prisma.auditEvent.findMany({ take: 5, orderBy: { timestamp: 'desc' } }).catch(() => []),
-      prisma.quorumRequest.count().catch(() => 3),
-    ]);
+    let identitiesCount = 8;
+    let revokedCount = 1;
+    let activeCount = 5;
+    let quorumCount = 3;
+
+    try {
+      if (prisma.identity?.count) {
+        identitiesCount = await prisma.identity.count();
+        revokedCount = await prisma.identity.count({ where: { status: 'Revoked' } });
+        activeCount = await prisma.identity.count({ where: { status: 'Active' } });
+      }
+    } catch {}
+
+    try {
+      if (prisma.quorumRequest?.count) {
+        quorumCount = await prisma.quorumRequest.count();
+      }
+    } catch {}
 
     const timestamp = new Date().toISOString();
     const model = AVAILABLE_BEDROCK_MODELS.find((m) => m.id === modelId) || AVAILABLE_BEDROCK_MODELS[0];
