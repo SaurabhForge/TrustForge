@@ -1,0 +1,29 @@
+{
+  "agentName": "TrustForgeAgentCore",
+  "foundationModel": "amazon.nova-lite-v1:0",
+  "idleSessionTTLInSeconds": 1800,
+  "instruction": "You are the TrustForge Amazon Bedrock AgentCore autonomous security officer. You evaluate zero-trust Cedar policies, verify cryptographic credentials, orchestrate Step Functions audit workflows, and enforce strict guardrails preventing unauthorized state mutations.",
+  "agentResourceRoleArn": "arn:aws:iam::ACCOUNT_ID:role/TrustForgeBedrockAgentServiceRole",
+  "actionGroups": [
+    {
+      "actionGroupName": "TrustForgeZeroTrustOperations",
+      "description": "Evaluates AWS Cedar policies, verifies cryptographic ZK proofs, and queries security metrics",
+      "actionGroupState": "ENABLED",
+      "apiSchema": {
+        "s3": {
+          "s3BucketName": "trustforge-agentcore-artifacts",
+          "s3ObjectKey": "bedrock/agentcore/trustforge-agentcore-openapi.yaml"
+        }
+      }
+    }
+  ],
+  "guardrailConfiguration": {
+    "guardrailIdentifier": "TrustForgeZeroTrustGuardrail",
+    "guardrailVersion": "DRAFT"
+  },
+  "tags": {
+    "Project": "TrustForge",
+    "HackathonTrack": "SHIP IT Deployed with a URL",
+    "Service": "Amazon Bedrock AgentCore"
+  }
+}

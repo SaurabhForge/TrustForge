@@ -257,4 +257,12 @@ export async function queryBedrockAgent(payload = {}) {
   });
 }
 
+export async function invokeBedrockAgentCore(payload = {}) {
+  return request('/ai/bedrock/agentcore/invoke', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+
 

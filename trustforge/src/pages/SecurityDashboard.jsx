@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import StatusBadge from '../components/StatusBadge'
-import { getSecurityDashboard, verifyAuditIntegrity, getBedrockStatus, runBedrockAudit, queryBedrockAgent } from '../services/api'
+import { getSecurityDashboard, verifyAuditIntegrity, getBedrockStatus, runBedrockAudit, queryBedrockAgent, invokeBedrockAgentCore } from '../services/api'
 
 const defaultSecurityMetrics = [
   { label: 'Decentralized Identities', value: '14,892', trend: '+4.2%', sub: '99.4% Compliant · W3C v1.0', icon: 'badge', trendColor: 'text-emerald-700' },
@@ -63,10 +63,10 @@ export default function SecurityDashboard() {
     if (!bedrockQuery.trim()) return
     setQueryingBedrock(true)
     try {
-      const res = await queryBedrockAgent({ query: bedrockQuery.trim(), modelId: bedrockModel })
+      const res = await invokeBedrockAgentCore({ prompt: bedrockQuery.trim(), modelId: bedrockModel })
       setBedrockQueryResult(res)
     } catch (err) {
-      alert(err.message || 'Bedrock query failed')
+      alert(err.message || 'Bedrock AgentCore query failed')
     } finally {
       setQueryingBedrock(false)
     }
@@ -376,19 +376,67 @@ export default function SecurityDashboard() {
             </div>
           </form>
 
-          {/* Bedrock Agent Response */}
+          {/* Bedrock AgentCore Execution & ReAct Trace */}
           {bedrockQueryResult && (
-            <div className="p-3.5 rounded-lg bg-indigo-50/50 border border-indigo-200/60 flex flex-col gap-2 animate-fade-in">
-              <div className="flex items-center justify-between text-xs text-indigo-900 font-medium">
-                <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[15px] text-indigo-700">smart_toy</span>
-                  <span>Agent Action Group: <strong>{bedrockQueryResult.actionInvoked}</strong></span>
-                </span>
-                <span className="font-code-xs text-[10px] text-indigo-700">{bedrockQueryResult.agentId}</span>
+            <div className="p-4 rounded-xl bg-indigo-50/40 border border-indigo-200/70 flex flex-col gap-3 animate-fade-in">
+              <div className="flex flex-wrap items-center justify-between text-xs text-indigo-900 font-medium pb-2 border-b border-indigo-200/50 gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-indigo-700">smart_toy</span>
+                  <span className="font-semibold text-body-sm">Amazon Bedrock AgentCore Execution</span>
+                  <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-code-xs text-[10px] font-bold">
+                    Action: {bedrockQueryResult.actionInvoked}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-indigo-700">
+                  <span>Model: <strong>{bedrockQueryResult.foundationModel || 'Amazon Nova Lite'}</strong></span>
+                  <span>•</span>
+                  <span className="font-code-xs text-[10px]">Session: {bedrockQueryResult.sessionId?.slice(0, 18)}...</span>
+                </div>
               </div>
-              <p className="text-body-sm text-indigo-950 leading-relaxed font-normal">
-                {bedrockQueryResult.response}
-              </p>
+
+              {/* Step-by-Step ReAct Trace */}
+              {bedrockQueryResult.reasoningSteps?.length > 0 && (
+                <div className="flex flex-col gap-2 py-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-900/70 font-code-xs">
+                    AgentCore Reasoning Trace (ReAct Loop)
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {bedrockQueryResult.reasoningSteps.map((s) => (
+                      <div
+                        key={s.step}
+                        className={`p-2.5 rounded-lg text-xs leading-relaxed flex items-start gap-2.5 border ${
+                          s.type === 'thought'
+                            ? 'bg-purple-500/10 border-purple-500/20 text-purple-950'
+                            : s.type === 'action'
+                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-950'
+                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-950'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[16px] mt-0.5 shrink-0">
+                          {s.type === 'thought' ? 'psychology' : s.type === 'action' ? 'bolt' : 'visibility'}
+                        </span>
+                        <div>
+                          <strong className="uppercase font-code-xs text-[10px] block mb-0.5 opacity-80">
+                            Step {s.step} • {s.type}
+                          </strong>
+                          <span>{s.content}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Final Agent Response */}
+              <div className="mt-1 p-3 rounded-lg bg-surface-container-lowest border border-indigo-200/50 shadow-sm">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-on-surface mb-1">
+                  <span className="material-symbols-outlined text-[16px] text-emerald-600">verified</span>
+                  <span>AgentCore Synthesized Conclusion:</span>
+                </div>
+                <p className="text-body-sm text-on-surface leading-relaxed">
+                  {bedrockQueryResult.finalResponse || bedrockQueryResult.response}
+                </p>
+              </div>
             </div>
           )}
         </div>

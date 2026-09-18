@@ -1,0 +1,140 @@
+openapi: 3.0.0
+info:
+  title: TrustForge Amazon Bedrock AgentCore Action Group API
+  version: 1.0.0
+  description: >
+    Action Group API specification for Amazon Bedrock AgentCore.
+    Connects Bedrock AgentCore foundation model reasoning (Amazon Nova / Anthropic Claude)
+    directly to TrustForge Zero-Trust policies, cryptographic verifications, and compliance workflows.
+paths:
+  /access/cedar/evaluate:
+    post:
+      summary: Evaluate an authorization request with AWS Cedar Policies
+      description: Deterministic policy evaluation enforcing permit/forbid guardrails.
+      operationId: evaluateCedarPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [principal, action]
+              properties:
+                principal:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      description: Principal role (ADMIN, SECURITY_ADMIN, AUDITOR, VERIFIER, USER)
+                    status:
+                      type: string
+                      description: Principal status (ACTIVE, SUSPENDED, REVOKED)
+                    did:
+                      type: string
+                      description: W3C Decentralized Identifier
+                action:
+                  type: string
+                  description: Target action (rotateKey, mintAsset, transferAsset, signQuorum, viewAuditTrail)
+                resource:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    ownerDid:
+                      type: string
+      responses:
+        '200':
+          description: Evaluation decision (ALLOW or DENY) with determining policy IDs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  decision:
+                    type: string
+                    enum: [ALLOW, DENY]
+                  determiningPolicies:
+                    type: array
+                    items:
+                      type: string
+                  diagnostics:
+                    type: object
+                    properties:
+                      reason:
+                        type: string
+
+  /verifications/verify:
+    post:
+      summary: Verify cryptographic credentials and zero-knowledge proofs
+      description: Verifies W3C Verifiable Credentials and ZK-STARK / Groth16 proofs against anchored on-chain state.
+      operationId: verifyCredential
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credentialId:
+                  type: string
+                proofType:
+                  type: string
+                  enum: [ZK-STARK, BBS_PLUS, ED25519_SIGNATURE]
+      responses:
+        '200':
+          description: Verification outcome
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  verifiedAt:
+                    type: string
+
+  /dashboard/security:
+    get:
+      summary: Fetch real-time zero-trust operational security telemetry
+      description: Returns health status, on-chain Merkle root anchors, and active incident metrics.
+      operationId: getSecurityTelemetry
+      responses:
+        '200':
+          description: Real-time telemetry snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      type: object
+
+  /stepfunctions/audit-workflow:
+    post:
+      summary: Trigger AWS Step Functions zero-trust compliance audit workflow
+      description: Starts an asynchronous multi-step audit workflow via AWS Step Functions.
+      operationId: triggerStepFunctionsAudit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auditScope:
+                  type: string
+                  default: FULL_ZERO_TRUST
+      responses:
+        '200':
+          description: Step Functions execution initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executionArn:
+                    type: string
+                  status:
+                    type: string
