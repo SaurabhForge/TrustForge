@@ -176,5 +176,4 @@ For deep technical specifications, review:
 ## 👥 Contributors & Hackathon Team
 
 - **Platform Lead**: Saurabh Kumar
-- **Hackathon**: Smart India Hackathon 2026 (SIH26125)
 - **Status**: Production-Ready Prototype
