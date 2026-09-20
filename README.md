@@ -178,5 +178,5 @@ For deep technical specifications, review:
 - **Platform Lead**: Saurabh Kumar
 - **Team Member**: Ashish Kumar
 - **Team Member**: Snehashis Roy
-- **Team Member**:
+- **Team Member**: Vishwas havalada
 - **Status**: Production-Ready Prototype
