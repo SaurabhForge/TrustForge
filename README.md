@@ -175,9 +175,9 @@ For deep technical specifications, review:
 
 ## 👥 Contributors & Hackathon Team
 
-- **Platform Lead**: Saurabh Kumar
+- **Platform Lead**: [Saurabh Kumar](https://github.com/SaurabhForge)
 - **Team Member**: [Ashish Kumar](https://github.com/Ashish666-28)
-- **Team Member**: Snehashis Roy
-- **Team Member**: Vishwas havalada
-- **Team Member**: Anantdhardubey06 
+- **Team Member**: [Snehashis Roy](https://github.com/snehashisroy1212)
+- **Team Member**: [Vishwas havalada](https://github.com/vishwa424)
+- **Team Member**: [Anantdhar Dubey](https://github.com/Anantdhardubey06)
 - **Status**: Production-Ready Prototype
