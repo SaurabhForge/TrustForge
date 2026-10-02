@@ -179,4 +179,5 @@ For deep technical specifications, review:
 - **Team Member**: [Ashish Kumar](https://github.com/Ashish666-28)
 - **Team Member**: Snehashis Roy
 - **Team Member**: Vishwas havalada
+- **Team Member**: Anantdhardubey06 
 - **Status**: Production-Ready Prototype
